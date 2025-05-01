@@ -169,12 +169,28 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART3_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
+  BSP_ACCELERO_Init();
   /* USER CODE BEGIN 2 */
 
   uint32_t i;
   arm_fir_instance_f32 S;
   arm_status status;
   float32_t  *inputF32, *outputF32;
+
+
+  int16_t data[3];
+  int32_t index = 0;
+  while (1) {
+
+	  BSP_ACCELERO_AccGetXYZ(&data[0]);
+
+	  testInput_f32_1kHz_15kHz[index++] = (float32_t)data[0];
+
+	  printf("%d = (%d, %d, %d) - %f\n", index, data[0], data[1], data[2], testInput_f32_1kHz_15kHz[index-1]);
+	  HAL_Delay(10);
+
+	  if (index == TEST_LENGTH_SAMPLES) break;
+  }
 
   /* Initialize input and output buffer pointers */
   inputF32 = &testInput_f32_1kHz_15kHz[0];
@@ -183,14 +199,20 @@ int main(void)
   /* Call FIR init function to initialize the instance structure. */
   arm_fir_init_f32(&S, NUM_TAPS, (float32_t *)&firCoeffs32[0], &firStateF32[0], blockSize);
 
+  printf("\nOutput: \n");
+  for (i=0; i<TEST_LENGTH_SAMPLES; i++) {
+	  printf("%f ", testOutput[0]);
+  }
+
+
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
     /* USER CODE END WHILE */
-	  printf("Hello\n");
-	  HAL_Delay(100);
+//	  printf("Hello\n");
+//	  HAL_Delay(100);
 
 	  /* ----------------------------------------------------------------------
 	  ** Call the FIR process function for every blockSize samples
@@ -201,34 +223,57 @@ int main(void)
 	    arm_fir_f32(&S, inputF32 + (i * blockSize), outputF32 + (i * blockSize), blockSize);
 	  }
 
+	  printf("Input: \n");
+	  for (i=0; i<TEST_LENGTH_SAMPLES; i++) {
+		  printf("%f, ", testInput_f32_1kHz_15kHz[i]);
+	  }
+
+	  printf("\nOutput: \n");
+	  for (i=0; i<TEST_LENGTH_SAMPLES; i++) {
+		  printf("%f, ", testOutput[i]);
+	  }
+	  printf("\nFinished.\n");
+
+
+
+
 	  /* ----------------------------------------------------------------------
 	  ** Compare the generated output against the reference output computed
 	  ** in MATLAB.
 	  ** ------------------------------------------------------------------- */
 
-	  snr = arm_snr_f32(&refOutput[0], &testOutput[0], TEST_LENGTH_SAMPLES);
+//	  snr = arm_snr_f32(&refOutput[0], &testOutput[0], TEST_LENGTH_SAMPLES);
+//
+//	  if (snr < SNR_THRESHOLD_F32)
+//	  {
+//	    status = ARM_MATH_TEST_FAILURE;
+//	    printf("Fail.\n");
+//	  }
+//	  else
+//	  {
+//	    status = ARM_MATH_SUCCESS;
+//	    printf("Success.\n");
+//	  }
 
-	  if (snr < SNR_THRESHOLD_F32)
-	  {
-	    status = ARM_MATH_TEST_FAILURE;
-	    printf("Fail.\n");
-	  }
-	  else
-	  {
-	    status = ARM_MATH_SUCCESS;
-	    printf("Success.\n");
-	  }
+//	  int16_t data[3];
+//
+//	  while (1) {
+//		  BSP_ACCELERO_AccGetXYZ(&data[0]);
+//
+//		  printf("%d, %d, %d\n", data[0], data[1], data[2]);
+//		  HAL_Delay(200);
+//	  }
 
 	  /* ----------------------------------------------------------------------
 	  ** Loop here if the signal does not match the reference output.
 	  ** ------------------------------------------------------------------- */
 
-	  if ( status != ARM_MATH_SUCCESS)
-	  {
-	    while (1);
-	  }
-
-	  while (1);                             /* main function does not return */
+//	  if ( status != ARM_MATH_SUCCESS)
+//	  {
+//	    while (1);
+//	  }
+//
+//	  while (1);                             /* main function does not return */
 
   /* USER CODE END 3 */
 }
